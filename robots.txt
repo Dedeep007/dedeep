@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://dedeepv.is-a.dev/sitemap.xml
