@@ -5224,7 +5224,7 @@ ${p.codeSnippet}
                         <div class="flex flex-wrap gap-1">
                             ${p.tags.map(t => `<span class="text-[10px] bg-[#141414] text-slate-400 px-2 py-0.5 rounded border border-white/5 font-mono">${t}</span>`).join("")}
                         </div>
-                        <button class="text-xs text-ubuntu-orange hover:underline font-bold" onclick="openWindow('gedit')">View Code &rarr;</button>
+                        <button class="text-xs text-ubuntu-orange hover:underline font-bold flex items-center gap-1" onclick="openInFirefox('${p.github}')">View Code <i class="fab fa-github ml-0.5"></i> &rarr;</button>
                     </div>
                 </div>
             `;
