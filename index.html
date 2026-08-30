@@ -3062,28 +3062,158 @@ ${p.codeSnippet}
         }
 
         /* =========================================================================
-           5. IN-OS FIREFOX BROWSER (Hyperlink Interceptor, Live Iframes & Simulators)
+           5. IN-OS FIREFOX BROWSER (Multi-Tab Engine, Live Iframes & Simulators)
            ========================================================================= */
-        let firefoxCurrentUrl = "https://github.com/Dedeep007";
+        let firefoxTabs = [
+            { id: 1, title: 'GitHub - Dedeep007', url: 'https://github.com/Dedeep007' }
+        ];
+        let activeFirefoxTabId = 1;
+        let firefoxTabCounter = 1;
         let firefoxHistory = ["https://github.com/Dedeep007"];
         let firefoxHistoryIndex = 0;
 
         function openInFirefox(url, title = null) {
-            openWindow('firefox', url);
+            if (!url) url = "https://github.com/Dedeep007";
+            if (!url.startsWith("http://") && !url.startsWith("https://")) {
+                url = "https://" + url;
+            }
+
+            if (activeWindows['firefox']) {
+                focusWindow('firefox');
+                createFirefoxTab(url, title);
+            } else {
+                firefoxTabs = [{ id: ++firefoxTabCounter, title: title || getUrlTitle(url), url: url }];
+                activeFirefoxTabId = firefoxTabCounter;
+                openWindow('firefox', url);
+            }
+        }
+
+        function getUrlTitle(url) {
+            if (!url) return "New Tab";
+            if (url.includes("github.com")) return "GitHub - Dedeep007";
+            if (url.includes("linkedin.com")) return "LinkedIn - Dedeep";
+            if (url.includes("rag-narok")) return "RAGnarok 2.0 (Live)";
+            if (url.includes("hydrosense")) return "Hydrosense AI (Live)";
+            if (url.includes("zenoverse")) return "ZenoVerse (Live)";
+            if (url.includes("google.com")) return "Google Search";
+            if (url.includes("dedeepv.is-a.dev")) return "Dedeep Portfolio";
+            return url.replace(/^https?:\/\//, '').split('/')[0] || "New Tab";
+        }
+
+        function createFirefoxTab(url = "https://google.com", title = null) {
+            playSystemSound(500, 'sine', 0.02);
+            if (!url.startsWith("http://") && !url.startsWith("https://")) {
+                url = "https://" + url;
+            }
+            const newId = ++firefoxTabCounter;
+            const newTab = {
+                id: newId,
+                title: title || getUrlTitle(url),
+                url: url
+            };
+            firefoxTabs.push(newTab);
+            activeFirefoxTabId = newId;
+            renderFirefoxTabsStrip();
+            navigateFirefox(url, false);
+        }
+
+        function switchFirefoxTab(tabId) {
+            playSystemSound(480, 'sine', 0.02);
+            activeFirefoxTabId = tabId;
+            const tab = firefoxTabs.find(t => t.id === tabId);
+            if (tab) {
+                renderFirefoxTabsStrip();
+                navigateFirefox(tab.url, false);
+            }
+        }
+
+        function closeFirefoxTab(tabId, event) {
+            if (event) {
+                event.stopPropagation();
+            }
+            playSystemSound(380, 'sine', 0.02);
+            const index = firefoxTabs.findIndex(t => t.id === tabId);
+            if (index === -1) return;
+
+            if (firefoxTabs.length === 1) {
+                // Reset sole tab to portfolio homepage
+                firefoxTabs[0].url = "https://dedeepv.is-a.dev";
+                firefoxTabs[0].title = "Dedeep Portfolio";
+                renderFirefoxTabsStrip();
+                navigateFirefox("https://dedeepv.is-a.dev", false);
+                return;
+            }
+
+            firefoxTabs.splice(index, 1);
+            if (activeFirefoxTabId === tabId) {
+                const nextTab = firefoxTabs[Math.max(0, index - 1)];
+                activeFirefoxTabId = nextTab.id;
+                renderFirefoxTabsStrip();
+                navigateFirefox(nextTab.url, false);
+            } else {
+                renderFirefoxTabsStrip();
+            }
+        }
+
+        function renderFirefoxTabsStrip() {
+            const strip = document.getElementById('firefox-tabs-container');
+            if (!strip) return;
+
+            strip.innerHTML = firefoxTabs.map(t => {
+                const isActive = t.id === activeFirefoxTabId;
+                const activeClass = isActive 
+                    ? 'bg-[#242424] text-white border-t-2 border-ubuntu-orange font-semibold shadow-md' 
+                    : 'bg-[#181818] text-slate-400 hover:bg-[#202020] hover:text-slate-200 border-t-2 border-transparent';
+                
+                let iconClass = 'fab fa-firefox-browser text-orange-500';
+                if (t.url.includes('github.com')) iconClass = 'fab fa-github text-slate-200';
+                else if (t.url.includes('linkedin.com')) iconClass = 'fab fa-linkedin text-blue-400';
+                else if (t.url.includes('google.com')) iconClass = 'fab fa-google text-red-400';
+
+                return `
+                    <div class="group px-3 py-1.5 rounded-t-lg text-xs flex items-center gap-2 shrink-0 max-w-[190px] cursor-pointer transition-all ${activeClass}" onclick="switchFirefoxTab(${t.id})" title="${escapeHtml(t.title)}">
+                        <i class="${iconClass} text-xs"></i>
+                        <span class="truncate text-xs flex-1">${escapeHtml(t.title)}</span>
+                        <button class="w-4 h-4 rounded-full hover:bg-white/20 text-slate-400 hover:text-white flex items-center justify-center text-[9px] opacity-70 group-hover:opacity-100 transition-opacity ml-1" onclick="closeFirefoxTab(${t.id}, event)" title="Close Tab">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+            }).join("");
         }
 
         function renderFirefoxContent(initialUrl) {
-            const url = initialUrl || firefoxCurrentUrl;
+            const activeTab = firefoxTabs.find(t => t.id === activeFirefoxTabId) || firefoxTabs[0];
+            const currentUrl = initialUrl || (activeTab ? activeTab.url : "https://github.com/Dedeep007");
+
             return `
                 <div class="h-full flex flex-col bg-[#1E1E1E] text-slate-200 select-none">
-                    <!-- Browser Chrome Tabs -->
-                    <div class="h-9 bg-[#181818] px-2 flex items-end space-x-1 border-b border-white/5 shrink-0 overflow-x-auto no-scrollbar">
-                        <div class="bg-[#242424] text-white px-3 py-1.5 rounded-t-lg text-xs flex items-center gap-2 border-t-2 border-ubuntu-orange shrink-0 max-w-xs truncate" id="firefox-tab-title">
-                            <i class="fab fa-firefox-browser text-orange-500 text-xs"></i>
-                            <span class="truncate font-medium" id="tab-label">GitHub - Dedeep007</span>
-                            <button class="text-slate-400 hover:text-white text-[10px] ml-1" onclick="navigateFirefox('https://dedeepv.is-a.dev')"><i class="fas fa-times"></i></button>
+                    <!-- Browser Chrome Tabs Strip -->
+                    <div class="h-9 bg-[#141414] px-2 flex items-end space-x-1 border-b border-white/5 shrink-0 overflow-x-auto no-scrollbar">
+                        <div id="firefox-tabs-container" class="flex items-end space-x-1 overflow-x-auto no-scrollbar max-w-[calc(100%-40px)]">
+                            ${firefoxTabs.map(t => {
+                                const isActive = t.id === activeFirefoxTabId;
+                                const activeClass = isActive 
+                                    ? 'bg-[#242424] text-white border-t-2 border-ubuntu-orange font-semibold shadow-md' 
+                                    : 'bg-[#181818] text-slate-400 hover:bg-[#202020] hover:text-slate-200 border-t-2 border-transparent';
+                                
+                                let iconClass = 'fab fa-firefox-browser text-orange-500';
+                                if (t.url.includes('github.com')) iconClass = 'fab fa-github text-slate-200';
+                                else if (t.url.includes('linkedin.com')) iconClass = 'fab fa-linkedin text-blue-400';
+                                else if (t.url.includes('google.com')) iconClass = 'fab fa-google text-red-400';
+
+                                return `
+                                    <div class="group px-3 py-1.5 rounded-t-lg text-xs flex items-center gap-2 shrink-0 max-w-[190px] cursor-pointer transition-all ${activeClass}" onclick="switchFirefoxTab(${t.id})" title="${escapeHtml(t.title)}">
+                                        <i class="${iconClass} text-xs"></i>
+                                        <span class="truncate text-xs flex-1">${escapeHtml(t.title)}</span>
+                                        <button class="w-4 h-4 rounded-full hover:bg-white/20 text-slate-400 hover:text-white flex items-center justify-center text-[9px] opacity-70 group-hover:opacity-100 transition-opacity ml-1" onclick="closeFirefoxTab(${t.id}, event)" title="Close Tab">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                `;
+                            }).join("")}
                         </div>
-                        <button class="p-1 text-slate-400 hover:text-white text-xs rounded hover:bg-white/10" onclick="navigateFirefox('https://google.com')" title="New Tab"><i class="fas fa-plus"></i></button>
+                        <button class="p-1.5 text-slate-400 hover:text-white text-xs rounded-lg hover:bg-white/10 shrink-0 ml-1 transition-colors" onclick="createFirefoxTab('https://google.com')" title="Open New Tab (Ctrl+T)"><i class="fas fa-plus"></i></button>
                     </div>
 
                     <!-- Navigation Toolbar & URL Bar -->
@@ -3098,11 +3228,11 @@ ${p.codeSnippet}
                         <!-- Omnibox URL Input -->
                         <div class="flex-1 flex items-center bg-[#121212] border border-white/10 rounded-full px-3 py-1 text-xs focus-within:border-ubuntu-orange focus-within:ring-1 focus-within:ring-ubuntu-orange transition-all">
                             <i class="fas fa-lock text-emerald-400 text-[10px] mr-2"></i>
-                            <input type="text" id="firefox-url-input" value="${url}" class="w-full bg-transparent text-slate-100 font-mono text-xs focus:outline-none" onkeydown="if(event.key==='Enter') navigateFirefox(this.value)">
+                            <input type="text" id="firefox-url-input" value="${currentUrl}" class="w-full bg-transparent text-slate-100 font-mono text-xs focus:outline-none" onkeydown="if(event.key==='Enter') navigateFirefox(this.value)">
                         </div>
 
                         <!-- Open in External Tab Escape Hatch -->
-                        <button class="px-2.5 py-1 bg-white/10 hover:bg-ubuntu-orange text-white rounded-lg transition-colors text-xs flex items-center gap-1.5 shrink-0 font-medium" onclick="window.open(firefoxCurrentUrl, '_blank')" title="Open this page in external real browser tab">
+                        <button class="px-2.5 py-1 bg-white/10 hover:bg-ubuntu-orange text-white rounded-lg transition-colors text-xs flex items-center gap-1.5 shrink-0 font-medium" onclick="window.open(getCurrentFirefoxUrl(), '_blank')" title="Open this page in external real browser tab">
                             <i class="fas fa-arrow-up-right-from-square text-[10px]"></i> <span class="hidden sm:inline">Real Tab</span>
                         </button>
                     </div>
@@ -3119,34 +3249,37 @@ ${p.codeSnippet}
 
                     <!-- Browser Viewport Area -->
                     <div class="flex-1 relative overflow-auto bg-[#0d1117]" id="firefox-viewport">
-                        ${renderFirefoxPage(url)}
+                        ${renderFirefoxPage(currentUrl)}
                     </div>
                 </div>
             `;
         }
 
-        function navigateFirefox(url) {
+        function getCurrentFirefoxUrl() {
+            const activeTab = firefoxTabs.find(t => t.id === activeFirefoxTabId);
+            return activeTab ? activeTab.url : "https://github.com/Dedeep007";
+        }
+
+        function navigateFirefox(url, updateTab = true) {
             playSystemSound(450, 'sine', 0.03);
             if (!url.startsWith("http://") && !url.startsWith("https://")) {
                 url = "https://" + url;
             }
-            firefoxCurrentUrl = url;
+
+            const currentTab = firefoxTabs.find(t => t.id === activeFirefoxTabId);
+            if (currentTab && updateTab) {
+                currentTab.url = url;
+                currentTab.title = getUrlTitle(url);
+                renderFirefoxTabsStrip();
+            }
+
             firefoxHistory.push(url);
             firefoxHistoryIndex = firefoxHistory.length - 1;
 
             const input = document.getElementById('firefox-url-input');
             const viewport = document.getElementById('firefox-viewport');
-            const tabLabel = document.getElementById('tab-label');
 
             if (input) input.value = url;
-            if (tabLabel) {
-                if (url.includes("github.com")) tabLabel.innerText = "GitHub - Dedeep007";
-                else if (url.includes("linkedin.com")) tabLabel.innerText = "LinkedIn - Dedeep Vasireddy";
-                else if (url.includes("rag-narok")) tabLabel.innerText = "RAGnarok 2.0 (Live)";
-                else if (url.includes("hydrosense")) tabLabel.innerText = "Hydrosense AI (Live)";
-                else if (url.includes("zenoverse")) tabLabel.innerText = "ZenoVerse (Live)";
-                else tabLabel.innerText = url.replace("https://", "").split("/")[0];
-            }
             if (viewport) viewport.innerHTML = renderFirefoxPage(url);
         }
 
@@ -3165,7 +3298,8 @@ ${p.codeSnippet}
         }
 
         function refreshFirefox() {
-            navigateFirefox(firefoxCurrentUrl);
+            const activeTab = firefoxTabs.find(t => t.id === activeFirefoxTabId);
+            navigateFirefox(activeTab ? activeTab.url : "https://github.com/Dedeep007");
         }
 
         function renderFirefoxPage(url) {
