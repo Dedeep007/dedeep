@@ -3528,13 +3528,12 @@ ${p.codeSnippet}
 
         function executeTerminalCommand(rawCmd, showPrompt = true) {
             playSystemSound(600, 'sine', 0.02);
-            const trimmed = rawCmd.trim();
-
-            if (showPrompt) {
-                appendTerminalLine(`<span class="terminal-prompt-user">dedeep</span>@<span class="terminal-prompt-host">ubuntu-noble</span>:<span class="terminal-prompt-path">${terminalCwd}</span>$ ${escapeHtml(rawCmd)}`);
-            }
+            const trimmed = (rawCmd || "").trim();
 
             if (!trimmed) {
+                if (showPrompt) {
+                    appendTerminalLine(`<span class="terminal-prompt-user">dedeep</span>@<span class="terminal-prompt-host">ubuntu-noble</span>:<span class="terminal-prompt-path">${terminalCwd}</span>$ `);
+                }
                 scrollTerminalToBottom();
                 return;
             }
@@ -3542,6 +3541,17 @@ ${p.codeSnippet}
             const args = trimmed.split(/\s+/);
             const cmd = args[0].toLowerCase();
             const restArgs = args.slice(1);
+
+            if (cmd === "clear" || cmd === "cls") {
+                const termOut = document.getElementById('terminal-output');
+                if (termOut) termOut.innerHTML = "";
+                scrollTerminalToBottom();
+                return;
+            }
+
+            if (showPrompt) {
+                appendTerminalLine(`<span class="terminal-prompt-user">dedeep</span>@<span class="terminal-prompt-host">ubuntu-noble</span>:<span class="terminal-prompt-path">${terminalCwd}</span>$ ${escapeHtml(rawCmd)}`);
+            }
 
             let resHtml = evaluateTerminalCore(cmd, restArgs, trimmed);
 
@@ -4685,9 +4695,10 @@ ${p.codeSnippet}
 
                 case "clear":
                 case "cls":
-                    output.innerHTML = "";
+                    const termOutputEl = document.getElementById('terminal-output');
+                    if (termOutputEl) termOutputEl.innerHTML = "";
                     scrollTerminalToBottom();
-                    return;
+                    return "";
 
                 case "sudo":
                 case "su":
