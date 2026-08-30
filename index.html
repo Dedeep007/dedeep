@@ -947,6 +947,7 @@
         #app-grid-overlay { z-index: 1400 !important; }
         #nautilus-props-modal { z-index: 1500 !important; }
         #power-dialog-modal { z-index: 1500 !important; }
+        #ubuntu-prompt-modal { z-index: 1600 !important; }
         #lock-screen { z-index: 2000 !important; }
 
         /* Dropdown Animations */
@@ -1960,6 +1961,40 @@
                     Close
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- Authentic Ubuntu GNOME Prompt / Input Modal -->
+    <div id="ubuntu-prompt-modal"
+        class="fixed inset-0 bg-black/75 backdrop-blur-md z-[1600] flex items-center justify-center hidden select-none p-4" onclick="if(event.target === this) closeUbuntuPromptModal()">
+        <div class="bg-[#242424] border border-white/10 rounded-2xl p-5 sm:p-6 max-w-md w-full shadow-2xl text-slate-200" onclick="event.stopPropagation()">
+            <div class="flex items-center gap-3 mb-3 pb-3 border-b border-white/10">
+                <div id="prompt-icon-container" class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-lg text-ubuntu-orange shrink-0">
+                    <i class="fas fa-folder-plus" id="prompt-modal-icon"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-white tracking-wide" id="prompt-modal-title">New Folder</h3>
+                    <p class="text-[11px] text-slate-400" id="prompt-modal-subtitle">Enter directory name</p>
+                </div>
+            </div>
+
+            <form id="ubuntu-prompt-form" onsubmit="submitUbuntuPromptModal(event)" class="space-y-4">
+                <div>
+                    <input type="text" id="ubuntu-prompt-input" autocomplete="off"
+                        class="w-full bg-[#141414] border border-white/20 rounded-xl py-2.5 px-3.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-ubuntu-orange focus:border-transparent transition-all">
+                </div>
+
+                <div class="flex justify-end items-center gap-2.5 pt-1">
+                    <button type="button" onclick="closeUbuntuPromptModal()"
+                        class="px-4 py-2 bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white rounded-xl text-xs font-semibold transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" id="prompt-modal-submit-btn"
+                        class="px-5 py-2 bg-ubuntu-orange hover:bg-orange-600 text-white rounded-xl text-xs font-bold transition-transform active:scale-95 shadow-lg">
+                        Create
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -6089,10 +6124,18 @@ ${p.codeSnippet}
 
         function promptGeditOpenFile() {
             const files = Object.keys(VFS).filter(k => typeof VFS[k] === 'string');
-            const pick = prompt("Enter file path to open in Gedit:\n\nAvailable:\n" + files.join("\n"), files[0] || "~/readme.md");
-            if (pick && VFS[pick] !== undefined) {
-                openFileInGedit(pick);
-            }
+            showUbuntuPromptModal({
+                title: 'Open File in Text Editor',
+                subtitle: 'Available: ' + files.slice(0, 4).join(', ') + '...',
+                icon: 'fas fa-file-lines text-purple-400',
+                defaultValue: files[0] || '~/readme.md',
+                confirmText: 'Open',
+                onConfirm: (pick) => {
+                    if (pick && VFS[pick] !== undefined) {
+                        openFileInGedit(pick);
+                    }
+                }
+            });
         }
 
         function refreshGeditUI() {
@@ -6455,6 +6498,56 @@ ${p.codeSnippet}
         }
 
         /* =========================================================================
+           UBUNTU GNOME MODAL INPUT PROMPT SYSTEM
+           ========================================================================= */
+        let activePromptCallback = null;
+
+        function showUbuntuPromptModal({ title, subtitle, icon, defaultValue = "", confirmText = "OK", onConfirm }) {
+            playSystemSound(480, 'sine', 0.03);
+            const modal = document.getElementById('ubuntu-prompt-modal');
+            const titleEl = document.getElementById('prompt-modal-title');
+            const subtitleEl = document.getElementById('prompt-modal-subtitle');
+            const iconEl = document.getElementById('prompt-modal-icon');
+            const inputEl = document.getElementById('ubuntu-prompt-input');
+            const submitBtn = document.getElementById('prompt-modal-submit-btn');
+
+            if (titleEl) titleEl.innerText = title || "Prompt";
+            if (subtitleEl) subtitleEl.innerText = subtitle || "";
+            if (iconEl && icon) iconEl.className = icon;
+            if (inputEl) {
+                inputEl.value = defaultValue || "";
+            }
+            if (submitBtn) submitBtn.innerText = confirmText || "OK";
+
+            activePromptCallback = onConfirm;
+            if (modal) modal.classList.remove('hidden');
+
+            setTimeout(() => {
+                if (inputEl) {
+                    inputEl.focus();
+                    inputEl.select();
+                }
+            }, 50);
+        }
+
+        function submitUbuntuPromptModal(e) {
+            if (e) e.preventDefault();
+            const inputEl = document.getElementById('ubuntu-prompt-input');
+            const val = inputEl ? inputEl.value.trim() : "";
+            const cb = activePromptCallback;
+            closeUbuntuPromptModal();
+            if (cb && val) {
+                cb(val);
+            }
+        }
+
+        function closeUbuntuPromptModal() {
+            const modal = document.getElementById('ubuntu-prompt-modal');
+            if (modal) modal.classList.add('hidden');
+            activePromptCallback = null;
+        }
+
+        /* =========================================================================
            16. ACTIVITIES / APP GRID OVERVIEW
            ========================================================================= */
         function toggleAppGrid() {
@@ -6687,26 +6780,34 @@ ${p.codeSnippet}
                     icon: 'icons/system/folder.png'
                 });
             } else if (action === 'rename') {
-                const newName = prompt("Rename item:", name);
-                if (newName && newName.trim() && newName.trim() !== name) {
-                    const cleanName = newName.trim();
-                    const newPath = `${filesCurrentPath}/${cleanName}`;
-                    VFS[newPath] = VFS[fullPath];
-                    delete VFS[fullPath];
-                    const dir = VFS[filesCurrentPath];
-                    if (dir && dir.children) {
-                        const idx = dir.children.indexOf(name);
-                        if (idx !== -1) dir.children[idx] = cleanName;
+                showUbuntuPromptModal({
+                    title: 'Rename Item',
+                    subtitle: `Enter a new name for '${name}'`,
+                    icon: 'fas fa-pen-to-square text-sky-400',
+                    defaultValue: name,
+                    confirmText: 'Rename',
+                    onConfirm: (newName) => {
+                        if (newName && newName.trim() && newName.trim() !== name) {
+                            const cleanName = newName.trim();
+                            const newPath = `${filesCurrentPath}/${cleanName}`;
+                            VFS[newPath] = VFS[fullPath];
+                            delete VFS[fullPath];
+                            const dir = VFS[filesCurrentPath];
+                            if (dir && dir.children) {
+                                const idx = dir.children.indexOf(name);
+                                if (idx !== -1) dir.children[idx] = cleanName;
+                            }
+                            persistCustomVFS();
+                            refreshNautilusUI();
+                            showUbuntuNotification({
+                                appName: 'Files',
+                                title: 'Item Renamed',
+                                message: `Renamed '${name}' to '${cleanName}'`,
+                                icon: 'icons/system/folder.png'
+                            });
+                        }
                     }
-                    persistCustomVFS();
-                    refreshNautilusUI();
-                    showUbuntuNotification({
-                        appName: 'Files',
-                        title: 'Item Renamed',
-                        message: `Renamed '${name}' to '${cleanName}'`,
-                        icon: 'icons/system/folder.png'
-                    });
-                }
+                });
             } else if (action === 'trash') {
                 moveToTrash(fullPath, isDir, name);
             } else if (action === 'copy_name') {
@@ -6746,26 +6847,32 @@ ${p.codeSnippet}
                 });
                 openFileInGedit(docPath);
             } else if (action === 'new_folder') {
-                const folderName = prompt("Enter new folder name:", "New_Folder");
-                if (folderName && folderName.trim()) {
-                    const cleanName = folderName.trim().replace(/[^a-zA-Z0-9_\-\.]/g, '_');
-                    const folderPath = `${filesCurrentPath}/${cleanName}`;
-                    if (!VFS[folderPath]) {
-                        VFS[folderPath] = { type: "dir", children: [] };
-                        if (!VFS[filesCurrentPath].children.includes(cleanName)) {
-                            VFS[filesCurrentPath].children.push(cleanName);
+                showUbuntuPromptModal({
+                    title: 'New Folder',
+                    subtitle: `Create a directory in ${filesCurrentPath}`,
+                    icon: 'fas fa-folder-plus text-amber-400',
+                    defaultValue: 'New_Folder',
+                    confirmText: 'Create',
+                    onConfirm: (folderName) => {
+                        const cleanName = folderName.trim().replace(/[^a-zA-Z0-9_\-\.]/g, '_');
+                        const folderPath = `${filesCurrentPath}/${cleanName}`;
+                        if (!VFS[folderPath]) {
+                            VFS[folderPath] = { type: "dir", children: [] };
+                            if (!VFS[filesCurrentPath].children.includes(cleanName)) {
+                                VFS[filesCurrentPath].children.push(cleanName);
+                            }
+                            persistCustomVFS();
+                            refreshNautilusUI();
+                            playSystemSound(520, 'sine', 0.04);
+                            showUbuntuNotification({
+                                appName: 'Files',
+                                title: 'New Folder Created',
+                                message: `Created directory '${cleanName}'`,
+                                icon: 'icons/system/folder.png'
+                            });
                         }
-                        persistCustomVFS();
-                        refreshNautilusUI();
-                        playSystemSound(520, 'sine', 0.04);
-                        showUbuntuNotification({
-                            appName: 'Files',
-                            title: 'New Folder Created',
-                            message: `Created directory '${cleanName}'`,
-                            icon: 'icons/system/folder.png'
-                        });
                     }
-                }
+                });
             }
         }
 
