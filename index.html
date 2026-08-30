@@ -933,10 +933,27 @@
             pointer-events: none;
         }
 
+        /* Strict Z-Index Hierarchy Layering System */
+        #desktop-selection-box { z-index: 25 !important; }
+        .window-snap-preview { z-index: 50 !important; }
+        .ubuntu-window { z-index: 100; }
+        #ubuntu-dock { z-index: 950 !important; }
+        #top-bar { z-index: 1000 !important; }
+        #calendar-dropdown { z-index: 1100 !important; }
+        #quick-settings-dropdown { z-index: 1100 !important; }
+        #desktop-context-menu { z-index: 1200 !important; }
+        #nautilus-context-menu { z-index: 1200 !important; }
+        #ubuntu-notification-banner { z-index: 1300 !important; }
+        #app-grid-overlay { z-index: 1400 !important; }
+        #nautilus-props-modal { z-index: 1500 !important; }
+        #power-dialog-modal { z-index: 1500 !important; }
+        #lock-screen { z-index: 2000 !important; }
+
         /* Dropdown Animations */
         #quick-settings-dropdown,
         #calendar-dropdown,
-        #desktop-context-menu {
+        #desktop-context-menu,
+        #nautilus-context-menu {
             transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.15s ease;
             transform-origin: top right;
         }
@@ -1430,7 +1447,7 @@
         </section>
     </div>
 
-    <header class="ubuntu-topbar w-full flex items-center justify-between px-4 z-50 select-none shrink-0" id="top-bar">
+    <header class="ubuntu-topbar w-full flex items-center justify-between px-4 z-[1000] select-none shrink-0" id="top-bar">
         <div class="flex items-center space-x-4">
             <button id="btn-activities"
                 class="py-1 rounded hover:bg-white/10 text-slate-200 transition-colors flex items-center active:scale-95 text-[14px] font-bold tracking-wide">
@@ -1465,7 +1482,7 @@
 
         <!-- Authentic Yaru Dock (Dash-to-Dock) -->
         <aside
-            class="ubuntu-dock h-12 md:h-full flex flex-row md:flex-col items-center justify-between md:justify-start py-1 md:py-2 z-40 select-none shrink-0"
+            class="ubuntu-dock h-12 md:h-full flex flex-row md:flex-col items-center justify-between md:justify-start py-1 md:py-2 z-[950] select-none shrink-0"
             id="ubuntu-dock">
 
             <!-- Pinned Apps (Official Ubuntu Yaru Icons) -->
@@ -1615,7 +1632,7 @@
 
     <!-- Dropdown: Calendar & Notifications -->
     <div id="calendar-dropdown"
-        class="fixed top-8 left-1/2 -translate-x-1/2 w-80 md:w-96 bg-[#1e1e1e] border border-white/10 rounded-2xl shadow-2xl p-4 text-slate-200 z-50 hidden select-none max-w-[95vw]">
+        class="fixed top-8 left-1/2 -translate-x-1/2 w-80 md:w-96 bg-[#1e1e1e] border border-white/10 rounded-2xl shadow-2xl p-4 text-slate-200 z-[1100] hidden select-none max-w-[95vw]">
         <div class="flex items-center justify-between border-b border-white/10 pb-3 mb-3">
             <div>
                 <h3 class="text-xl font-bold text-white" id="cal-time">18:30:00</h3>
@@ -1666,7 +1683,7 @@
 
     <!-- Dropdown: Quick Settings Pill Menu -->
     <div id="quick-settings-dropdown"
-        class="fixed top-8 right-2 sm:right-3 w-80 bg-[#1e1e1e] border border-white/10 rounded-2xl shadow-2xl p-4 text-slate-200 z-50 hidden select-none max-w-[95vw]">
+        class="fixed top-8 right-2 sm:right-3 w-80 bg-[#1e1e1e] border border-white/10 rounded-2xl shadow-2xl p-4 text-slate-200 z-[1100] hidden select-none max-w-[95vw]">
 
         <!-- Toggle Buttons Grid -->
         <div class="grid grid-cols-2 gap-2 mb-4">
@@ -1759,7 +1776,7 @@
 
     <!-- Full Screen App Grid (Activities Overview) -->
     <div id="app-grid-overlay"
-        class="fixed inset-0 bg-[#0f0f11]/90 backdrop-blur-2xl z-50 flex flex-col items-center justify-center p-4 md:p-6 hidden select-none">
+        class="fixed inset-0 bg-[#0f0f11]/90 backdrop-blur-2xl z-[1400] flex flex-col items-center justify-center p-4 md:p-6 hidden select-none">
 
         <!-- Search Input -->
         <div class="w-full max-w-md mb-6 md:mb-8 relative">
@@ -1848,7 +1865,7 @@
 
     <!-- Desktop Right-Click Context Menu -->
     <div id="desktop-context-menu"
-        class="fixed bg-[#1e1e1e] border border-white/10 rounded-xl shadow-2xl py-1.5 text-xs text-slate-200 z-50 hidden w-52 select-none">
+        class="fixed bg-[#1e1e1e] border border-white/10 rounded-xl shadow-2xl py-1.5 text-xs text-slate-200 z-[1200] hidden w-52 select-none">
         <button
             class="w-full text-left px-3 py-2 hover:bg-ubuntu-orange hover:text-white flex items-center gap-2.5 transition-colors"
             onclick="openWindow('terminal'); hideContextMenu();">
@@ -1890,7 +1907,7 @@
 
     <!-- Nautilus / Files Right-Click Context Menu -->
     <div id="nautilus-context-menu"
-        class="fixed bg-[#1e1e1e] border border-white/10 rounded-xl shadow-2xl py-1.5 text-xs text-slate-200 z-50 hidden w-56 select-none font-sans">
+        class="fixed bg-[#1e1e1e] border border-white/10 rounded-xl shadow-2xl py-1.5 text-xs text-slate-200 z-[1200] hidden w-56 select-none font-sans">
         <div id="nautilus-menu-content">
             <!-- Dynamically populated based on target -->
         </div>
@@ -1898,7 +1915,7 @@
 
     <!-- GNOME Files Properties Modal -->
     <div id="nautilus-props-modal"
-        class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center hidden select-none p-4" onclick="if(event.target === this) closeNautilusProperties()">
+        class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[1500] flex items-center justify-center hidden select-none p-4" onclick="if(event.target === this) closeNautilusProperties()">
         <div class="bg-[#242424] border border-white/10 rounded-2xl p-5 max-w-md w-full shadow-2xl text-slate-200" onclick="event.stopPropagation()">
             <div class="flex items-center justify-between border-b border-white/10 pb-3 mb-4">
                 <div class="flex items-center gap-3">
@@ -1948,7 +1965,7 @@
 
     <!-- Ubuntu GNOME System Notification Banner / Toast Hub -->
     <div id="ubuntu-notification-banner"
-        class="fixed top-8 left-1/2 -translate-x-1/2 z-[100] transition-all duration-300 transform -translate-y-24 opacity-0 pointer-events-none max-w-sm sm:max-w-md w-[92vw] select-none font-sans">
+        class="fixed top-8 left-1/2 -translate-x-1/2 z-[1300] transition-all duration-300 transform -translate-y-24 opacity-0 pointer-events-none max-w-sm sm:max-w-md w-[92vw] select-none font-sans">
         <div class="bg-[#242424]/95 border border-white/15 rounded-2xl shadow-2xl backdrop-blur-xl p-3.5 flex items-start gap-3 text-slate-200">
             <div id="notif-icon-container" class="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center shrink-0 mt-0.5 overflow-hidden">
                 <img id="notif-icon-img" src="icons/apps/gedit.png" class="w-6 h-6 object-contain" alt="App">
@@ -1969,7 +1986,7 @@
 
     <!-- Ubuntu GDM Lock Screen Modal -->
     <div id="lock-screen"
-        class="fixed inset-0 wp-noble-numbat z-50 flex flex-col justify-between text-white select-none"
+        class="fixed inset-0 wp-noble-numbat z-[2000] flex flex-col justify-between text-white select-none"
         onclick="focusLockInput()">
         <!-- Dark Frosted Vignette Overlay -->
         <div class="absolute inset-0 bg-black/55 backdrop-blur-2xl pointer-events-none"></div>
@@ -2036,7 +2053,7 @@
 
     <!-- Power Off / Restart Modal -->
     <div id="power-modal"
-        class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center hidden select-none p-4">
+        class="fixed inset-0 bg-black/80 backdrop-blur-md z-[1500] flex items-center justify-center hidden select-none p-4">
         <div class="bg-[#1e1e1e] border border-white/10 rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl text-center">
             <div
                 class="w-14 h-14 mx-auto rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center text-2xl mb-4">
@@ -2520,7 +2537,7 @@ ${p.codeSnippet}
         /* =========================================================================
            3. WINDOW MANAGER (Z-Index, Draggable, Resizable, Snap, Minimize, Maximize)
            ========================================================================= */
-        let windowZIndex = 40;
+        let windowZIndex = 100;
         let activeWindows = {};
         let focusedWindowId = null;
 
@@ -2675,7 +2692,16 @@ ${p.codeSnippet}
                 winEl.style.height = `${targetH}px`;
             }
 
-            winEl.style.zIndex = ++windowZIndex;
+            windowZIndex++;
+            if (windowZIndex > 800) {
+                const sorted = Object.values(activeWindows).sort((a, b) => (parseInt(a.element.style.zIndex) || 100) - (parseInt(b.element.style.zIndex) || 100));
+                let baseZ = 100;
+                sorted.forEach(w => {
+                    w.element.style.zIndex = baseZ++;
+                });
+                windowZIndex = baseZ;
+            }
+            winEl.style.zIndex = windowZIndex;
 
             winEl.innerHTML = `
                 <!-- Resize Handles (desktop only) -->
@@ -2744,7 +2770,16 @@ ${p.codeSnippet}
             });
 
             winObj.element.classList.add('focused');
-            winObj.element.style.zIndex = ++windowZIndex;
+            windowZIndex++;
+            if (windowZIndex > 800) {
+                const sorted = Object.values(activeWindows).sort((a, b) => (parseInt(a.element.style.zIndex) || 100) - (parseInt(b.element.style.zIndex) || 100));
+                let baseZ = 100;
+                sorted.forEach(w => {
+                    w.element.style.zIndex = baseZ++;
+                });
+                windowZIndex = baseZ;
+            }
+            winObj.element.style.zIndex = windowZIndex;
             focusedWindowId = appId;
 
             // Update top bar active app indicator
